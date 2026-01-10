@@ -4,6 +4,8 @@ import com.project.code_vocabulary_builder.model.Admin;
 import com.project.code_vocabulary_builder.repository.AdminRepo;
 import com.project.code_vocabulary_builder.service.AdminService;
 import com.project.code_vocabulary_builder.service.JwtService;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -53,13 +55,44 @@ public class AdminController {
         return ResponseEntity.status(200).body(h);
     }
 
+//    @PostMapping("/login")
+//    public ResponseEntity<Map<String, String>> loginAdmin(@RequestBody Admin admin) {
+//        Map<String, String> h = new HashMap<>();
+//        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(admin.getName() , admin.getPassword()));
+//        String token = jwtService.generateToken(admin.getName());
+//        h.put("token",token);
+//        h.put("status","connected");
+//        return ResponseEntity.status(200).body(h);
+//    }
+
     @PostMapping("/login")
-    public ResponseEntity<Map<String, String>> loginAdmin(@RequestBody Admin admin) {
-        Map<String, String> h = new HashMap<>();
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(admin.getName() , admin.getPassword()));
+    public ResponseEntity<Map<String, String>> loginAdmin(
+            @RequestBody Admin admin,
+            HttpServletResponse response
+    ) {
+
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        admin.getName(),
+                        admin.getPassword()
+                )
+        );
+
         String token = jwtService.generateToken(admin.getName());
-        h.put("token",token);
-        h.put("status","connected");
-        return ResponseEntity.status(200).body(h);
+
+        Cookie jwtCookie = new Cookie("JWT_TOKEN", token);
+        jwtCookie.setHttpOnly(true);
+        jwtCookie.setSecure(false); // true in production (HTTPS)
+        jwtCookie.setPath("/");
+        jwtCookie.setMaxAge(60 * 60 * 24); // 1 day
+        // jwtCookie.setSameSite("None"); // if frontend is on different domain (Spring Boot 3.2+)
+
+        response.addCookie(jwtCookie);
+
+        Map<String, String> body = new HashMap<>();
+        body.put("status", "connected");
+
+        return ResponseEntity.ok(body);
     }
+
 }
