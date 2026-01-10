@@ -9,7 +9,7 @@ const Navbar = () => {
     <nav className="navbar">
       <div className="navbar-container">
         <a className="navbar-logo">
-          <i className="fas fa-robot"></i>Techlingo
+          Techlingo
         </a>
 
         <ul className="navbar-menu">
